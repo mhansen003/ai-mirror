@@ -6,11 +6,11 @@ import AvatarPanel from '@/components/AvatarPanel';
 import type { ExpressionState } from '@/types/expressions';
 import { DEFAULT_EXPRESSION } from '@/types/expressions';
 
-export type AvatarMode = 'ai' | 'mirror';
+export type AvatarMode = 'simon' | 'mirror';
 
 export default function Home() {
   const expressionRef = useRef<ExpressionState>({ ...DEFAULT_EXPRESSION });
-  const [mode, setMode] = useState<AvatarMode>('ai');
+  const [mode, setMode] = useState<AvatarMode>('simon');
 
   return (
     <div className="relative h-screen w-screen overflow-hidden bg-[#050510]">
@@ -36,20 +36,20 @@ export default function Home() {
 
       {/* Mode toggle bar — z-[60] to sit above the vignette (z-50) */}
       <div className="absolute bottom-0 left-0 right-0 z-[60] flex items-center justify-center py-3">
-        <div className="mode-toggle flex items-center gap-1 rounded-full border border-white/10 bg-black/60 p-1 backdrop-blur-md">
+        <div className="flex items-center gap-1 rounded-full border border-white/10 bg-black/60 p-1 backdrop-blur-md">
           <button
-            onClick={() => setMode('ai')}
-            className={`mode-btn rounded-full px-5 py-1.5 font-[family-name:var(--font-orbitron)] text-xs font-medium tracking-wider transition-all duration-300 ${
-              mode === 'ai'
+            onClick={() => setMode('simon')}
+            className={`rounded-full px-4 py-1.5 font-[family-name:var(--font-orbitron)] text-xs font-medium tracking-wider transition-all duration-300 ${
+              mode === 'simon'
                 ? 'bg-fuchsia-500/20 text-fuchsia-400 shadow-[0_0_12px_rgba(255,0,255,0.25)]'
                 : 'text-white/40 hover:text-white/60'
             }`}
           >
-            AI
+            SIMON SAYS
           </button>
           <button
             onClick={() => setMode('mirror')}
-            className={`mode-btn rounded-full px-5 py-1.5 font-[family-name:var(--font-orbitron)] text-xs font-medium tracking-wider transition-all duration-300 ${
+            className={`rounded-full px-4 py-1.5 font-[family-name:var(--font-orbitron)] text-xs font-medium tracking-wider transition-all duration-300 ${
               mode === 'mirror'
                 ? 'bg-cyan-500/20 text-cyan-400 shadow-[0_0_12px_rgba(0,255,255,0.25)]'
                 : 'text-white/40 hover:text-white/60'

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { AvatarRenderer } from '@/lib/avatar-renderer';
-import { BehaviorEngine } from '@/lib/behavior-engine';
+import { SimonSaysEngine } from '@/lib/simon-says-engine';
 import { lerpExpression } from '@/lib/lerp';
 import type { ExpressionState, BehaviorOutput } from '@/types/expressions';
 import { DEFAULT_EXPRESSION } from '@/types/expressions';
@@ -16,13 +16,20 @@ interface AvatarPanelProps {
 export default function AvatarPanel({ expressionRef, mode }: AvatarPanelProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rendererRef = useRef<AvatarRenderer | null>(null);
-  const behaviorRef = useRef<BehaviorEngine | null>(null);
+  const simonRef = useRef<SimonSaysEngine | null>(null);
   const animFrameRef = useRef<number>(0);
   const modeRef = useRef<AvatarMode>(mode);
+  const prevModeRef = useRef<AvatarMode>(mode);
   const mirrorSmoothedRef = useRef<ExpressionState>({ ...DEFAULT_EXPRESSION });
 
-  // Keep modeRef in sync without triggering effect re-run
+  // Keep modeRef in sync; reset Simon Says when switching TO it
   modeRef.current = mode;
+  if (mode !== prevModeRef.current) {
+    prevModeRef.current = mode;
+    if (mode === 'simon' && simonRef.current) {
+      simonRef.current.reset();
+    }
+  }
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -32,7 +39,7 @@ export default function AvatarPanel({ expressionRef, mode }: AvatarPanelProps) {
     if (!ctx) return;
 
     rendererRef.current = new AvatarRenderer();
-    behaviorRef.current = new BehaviorEngine();
+    simonRef.current = new SimonSaysEngine();
 
     const resize = () => {
       const rect = canvas.parentElement!.getBoundingClientRect();
@@ -50,9 +57,9 @@ export default function AvatarPanel({ expressionRef, mode }: AvatarPanelProps) {
     const loop = () => {
       const rect = canvas.parentElement!.getBoundingClientRect();
 
-      if (modeRef.current === 'ai') {
-        // AI Mode: behavior engine decides the avatar's expression
-        const behavior = behaviorRef.current!.update(expressionRef.current);
+      if (modeRef.current === 'simon') {
+        // Simon Says: game engine drives the avatar
+        const behavior = simonRef.current!.update(expressionRef.current);
         rendererRef.current!.draw(ctx, rect.width, rect.height, behavior);
       } else {
         // Mirror Mode: avatar copies user's expression directly
@@ -97,7 +104,7 @@ export default function AvatarPanel({ expressionRef, mode }: AvatarPanelProps) {
 
       {/* Label */}
       <div className="absolute right-3 top-3 mr-4 font-mono text-xs tracking-widest text-fuchsia-400/60">
-        {mode === 'ai' ? 'AI MODE' : 'MIRROR MODE'}
+        {mode === 'simon' ? 'SIMON SAYS' : 'MIRROR MODE'}
       </div>
     </div>
   );
