@@ -3,18 +3,26 @@
 import { useEffect, useRef } from 'react';
 import { AvatarRenderer } from '@/lib/avatar-renderer';
 import { BehaviorEngine } from '@/lib/behavior-engine';
+import { lerpExpression } from '@/lib/lerp';
 import type { ExpressionState, BehaviorOutput } from '@/types/expressions';
 import { DEFAULT_EXPRESSION } from '@/types/expressions';
+import type { AvatarMode } from '@/app/page';
 
 interface AvatarPanelProps {
   expressionRef: React.MutableRefObject<ExpressionState>;
+  mode: AvatarMode;
 }
 
-export default function AvatarPanel({ expressionRef }: AvatarPanelProps) {
+export default function AvatarPanel({ expressionRef, mode }: AvatarPanelProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rendererRef = useRef<AvatarRenderer | null>(null);
   const behaviorRef = useRef<BehaviorEngine | null>(null);
   const animFrameRef = useRef<number>(0);
+  const modeRef = useRef<AvatarMode>(mode);
+  const mirrorSmoothedRef = useRef<ExpressionState>({ ...DEFAULT_EXPRESSION });
+
+  // Keep modeRef in sync without triggering effect re-run
+  modeRef.current = mode;
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -41,9 +49,29 @@ export default function AvatarPanel({ expressionRef }: AvatarPanelProps) {
 
     const loop = () => {
       const rect = canvas.parentElement!.getBoundingClientRect();
-      // Feed user's expression into behavior engine → get avatar's reaction
-      const behavior = behaviorRef.current!.update(expressionRef.current);
-      rendererRef.current!.draw(ctx, rect.width, rect.height, behavior);
+
+      if (modeRef.current === 'ai') {
+        // AI Mode: behavior engine decides the avatar's expression
+        const behavior = behaviorRef.current!.update(expressionRef.current);
+        rendererRef.current!.draw(ctx, rect.width, rect.height, behavior);
+      } else {
+        // Mirror Mode: avatar copies user's expression directly
+        mirrorSmoothedRef.current = lerpExpression(
+          mirrorSmoothedRef.current,
+          expressionRef.current,
+          0.2
+        );
+        const mirrorBehavior: BehaviorOutput = {
+          avatarExpression: mirrorSmoothedRef.current,
+          mode: 'idle',
+          displayText: '',
+          subText: 'MIRROR MODE',
+          energy: 0.4,
+          flashColor: null,
+        };
+        rendererRef.current!.draw(ctx, rect.width, rect.height, mirrorBehavior);
+      }
+
       animFrameRef.current = requestAnimationFrame(loop);
     };
 
@@ -69,7 +97,7 @@ export default function AvatarPanel({ expressionRef }: AvatarPanelProps) {
 
       {/* Label */}
       <div className="absolute right-3 top-3 mr-4 font-mono text-xs tracking-widest text-fuchsia-400/60">
-        AI MIRROR
+        {mode === 'ai' ? 'AI MODE' : 'MIRROR MODE'}
       </div>
     </div>
   );
