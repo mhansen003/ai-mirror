@@ -5,18 +5,18 @@ interface Particle {
   vy: number;
   size: number;
   alpha: number;
-  hue: number; // 0-360
+  hue: number;
   life: number;
   maxLife: number;
+  type: 'dot' | 'ring' | 'dash';
 }
 
-const MAX_PARTICLES = 40;
+const MAX_PARTICLES = 55;
 
 export class ParticleSystem {
   private particles: Particle[] = [];
 
   constructor() {
-    // Seed initial particles
     for (let i = 0; i < MAX_PARTICLES; i++) {
       this.particles.push(this.createParticle());
     }
@@ -24,16 +24,18 @@ export class ParticleSystem {
 
   private createParticle(): Particle {
     const maxLife = 200 + Math.random() * 300;
+    const types: Particle['type'][] = ['dot', 'dot', 'dot', 'ring', 'dash'];
     return {
       x: Math.random(),
       y: Math.random(),
       vx: (Math.random() - 0.5) * 0.0005,
-      vy: -0.0002 - Math.random() * 0.0005, // float upward
+      vy: -0.0002 - Math.random() * 0.0005,
       size: 1 + Math.random() * 2.5,
       alpha: 0,
-      hue: Math.random() > 0.5 ? 180 : 280, // cyan or magenta
-      life: Math.random() * maxLife, // stagger start
+      hue: [180, 260, 280, 320][Math.floor(Math.random() * 4)],
+      life: Math.random() * maxLife,
       maxLife,
+      type: types[Math.floor(Math.random() * types.length)],
     };
   }
 
@@ -44,7 +46,6 @@ export class ParticleSystem {
       p.x += p.vx;
       p.y += p.vy;
 
-      // Fade in, stay, fade out
       const progress = p.life / p.maxLife;
       if (progress < 0.2) {
         p.alpha = progress / 0.2;
@@ -53,9 +54,8 @@ export class ParticleSystem {
       } else {
         p.alpha = 1;
       }
-      p.alpha *= 0.4; // keep subtle
+      p.alpha *= 0.4;
 
-      // Respawn when dead or offscreen
       if (p.life >= p.maxLife || p.y < -0.05 || p.x < -0.05 || p.x > 1.05) {
         this.particles[i] = this.createParticle();
         this.particles[i].life = 0;
@@ -69,16 +69,30 @@ export class ParticleSystem {
       const px = p.x * width;
       const py = p.y * height;
 
-      ctx.beginPath();
-      ctx.arc(px, py, p.size, 0, Math.PI * 2);
-      ctx.fillStyle = `hsla(${p.hue}, 100%, 70%, ${p.alpha})`;
-      ctx.fill();
-
-      // Tiny glow
-      ctx.beginPath();
-      ctx.arc(px, py, p.size * 2.5, 0, Math.PI * 2);
-      ctx.fillStyle = `hsla(${p.hue}, 100%, 70%, ${p.alpha * 0.15})`;
-      ctx.fill();
+      if (p.type === 'dot') {
+        ctx.beginPath();
+        ctx.arc(px, py, p.size, 0, Math.PI * 2);
+        ctx.fillStyle = `hsla(${p.hue}, 100%, 70%, ${p.alpha})`;
+        ctx.fill();
+        // Glow halo
+        ctx.beginPath();
+        ctx.arc(px, py, p.size * 2.5, 0, Math.PI * 2);
+        ctx.fillStyle = `hsla(${p.hue}, 100%, 70%, ${p.alpha * 0.15})`;
+        ctx.fill();
+      } else if (p.type === 'ring') {
+        ctx.beginPath();
+        ctx.arc(px, py, p.size * 2, 0, Math.PI * 2);
+        ctx.strokeStyle = `hsla(${p.hue}, 100%, 70%, ${p.alpha * 0.5})`;
+        ctx.lineWidth = 0.5;
+        ctx.stroke();
+      } else if (p.type === 'dash') {
+        ctx.beginPath();
+        ctx.moveTo(px - p.size * 2, py);
+        ctx.lineTo(px + p.size * 2, py);
+        ctx.strokeStyle = `hsla(${p.hue}, 100%, 70%, ${p.alpha * 0.4})`;
+        ctx.lineWidth = 0.5;
+        ctx.stroke();
+      }
     }
   }
 }

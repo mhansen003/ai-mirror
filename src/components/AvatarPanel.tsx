@@ -2,7 +2,8 @@
 
 import { useEffect, useRef } from 'react';
 import { AvatarRenderer } from '@/lib/avatar-renderer';
-import type { ExpressionState } from '@/types/expressions';
+import { BehaviorEngine } from '@/lib/behavior-engine';
+import type { ExpressionState, BehaviorOutput } from '@/types/expressions';
 import { DEFAULT_EXPRESSION } from '@/types/expressions';
 
 interface AvatarPanelProps {
@@ -12,6 +13,7 @@ interface AvatarPanelProps {
 export default function AvatarPanel({ expressionRef }: AvatarPanelProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rendererRef = useRef<AvatarRenderer | null>(null);
+  const behaviorRef = useRef<BehaviorEngine | null>(null);
   const animFrameRef = useRef<number>(0);
 
   useEffect(() => {
@@ -22,6 +24,7 @@ export default function AvatarPanel({ expressionRef }: AvatarPanelProps) {
     if (!ctx) return;
 
     rendererRef.current = new AvatarRenderer();
+    behaviorRef.current = new BehaviorEngine();
 
     const resize = () => {
       const rect = canvas.parentElement!.getBoundingClientRect();
@@ -38,7 +41,9 @@ export default function AvatarPanel({ expressionRef }: AvatarPanelProps) {
 
     const loop = () => {
       const rect = canvas.parentElement!.getBoundingClientRect();
-      rendererRef.current!.draw(ctx, rect.width, rect.height, expressionRef.current);
+      // Feed user's expression into behavior engine → get avatar's reaction
+      const behavior = behaviorRef.current!.update(expressionRef.current);
+      rendererRef.current!.draw(ctx, rect.width, rect.height, behavior);
       animFrameRef.current = requestAnimationFrame(loop);
     };
 

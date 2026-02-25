@@ -57,3 +57,28 @@ export interface Point2D {
   x: number;
   y: number;
 }
+
+/** What the behavior engine outputs each frame */
+export interface BehaviorOutput {
+  /** The expression the avatar should display (its own, NOT the user's) */
+  avatarExpression: ExpressionState;
+  /** Current challenge/mode name */
+  mode: BehaviorMode;
+  /** Text shown to the user — taunts, challenges, reactions */
+  displayText: string;
+  /** Secondary smaller text (score, timer, etc.) */
+  subText: string;
+  /** Intensity of the avatar's current vibe (affects glow/particles) */
+  energy: number; // 0-1
+  /** Flash color for reactions (null = no flash) */
+  flashColor: string | null;
+}
+
+export type BehaviorMode =
+  | 'idle'
+  | 'staring_contest'
+  | 'dont_smile'
+  | 'copy_me'
+  | 'react'
+  | 'taunt'
+  | 'judging';
