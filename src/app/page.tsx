@@ -34,8 +34,8 @@ export default function Home() {
         </div>
       </main>
 
-      {/* Mode toggle bar */}
-      <div className="absolute bottom-0 left-0 right-0 z-40 flex items-center justify-center py-3">
+      {/* Mode toggle bar — z-[60] to sit above the vignette (z-50) */}
+      <div className="absolute bottom-0 left-0 right-0 z-[60] flex items-center justify-center py-3">
         <div className="mode-toggle flex items-center gap-1 rounded-full border border-white/10 bg-black/60 p-1 backdrop-blur-md">
           <button
             onClick={() => setMode('ai')}
